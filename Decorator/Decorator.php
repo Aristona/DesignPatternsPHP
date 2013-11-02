@@ -1,84 +1,31 @@
 <?php
 
-namespace DesignPatterns;
+namespace DesignPatterns\Decorator;
 
 /**
- * Decorator pattern
- *
- * Purpose:
- * to dynamically add new functionality to class instances
- *
- * Examples:
- * - Zend Framework: decorators for Zend_Form_Element instances
- * - Web Service Layer: Decorators JSON and XML for a REST service (in this case, only one of these should be allowed of
- *   course)
- *
+ * the Decorator MUST implement the RendererInterface contract, this is the key-feature
+ * of this design pattern. If not, this is no longer a Decorator but just a dumb
+ * wrapper.
  */
-class Webservice
+
+/**
+ * class Decorator
+ */
+abstract class Decorator implements RendererInterface
 {
-    protected $_data;
-
     /**
-     * an array to hold all added decorators, often there would be defaults set in this
-     * array, e.g. the service could be defaulted to use JSON and only for special APIs
-     * use XML
-     *
-     * @var array
+     * @var RendererInterface
      */
-    protected $_decorators = array();
-
-    public function __construct($data)
-    {
-        $this->_data = $data;
-    }
+    protected $wrapped;
 
     /**
+     * You must type-hint the wrapped component :
+     * It ensures you can call renderData() in the subclasses !
      * 
-     *
-     * @param WebserviceDecorator $decorator
-     * @return void
+     * @param RendererInterface $wrappable
      */
-    public function addDecorator(WebserviceDecorator $decorator)
+    public function __construct(RendererInterface $wrappable)
     {
-        $this->_decorators[] = $decorator;
-    }
-
-    /**
-     * @return string
-     */
-    public function renderData()
-    {
-        $response = '';
-        foreach ($this->_decorators as $decorator) {
-            $response = $decorator->renderData($this->_data);
-        }
-
-        return $response;
+        $this->wrapped = $wrappable;
     }
 }
-
-interface WebserviceDecorator
-{
-    public function renderData($data);
-}
-
-class JsonDecorator implements WebserviceDecorator
-{
-    public function renderData($data)
-    {
-        return json_encode($data);
-    }
-}
-
-class XmlDecorator implements WebserviceDecorator
-{
-    public function renderData($data)
-    {
-        // do some fany conversion to xml from array ...
-        return simplexml_load_string($data);
-    }
-}
-
-$service = new Webservice(array('foo' => 'bar'));
-$service->addDecorator(new JsonDecorator());
-echo $service->renderData();
